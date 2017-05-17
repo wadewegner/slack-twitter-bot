@@ -31,7 +31,8 @@ var bot = new Bot(settings);
 
 bot.on('start', function () {
 
-  console.log("Starting bot service ...")
+  console.log("Starting bot service ...");
+  bot.postMessageToChannel('salesforcedxeyes', `Reporting for service, @WadeWegner!`);
 
   const minutes = process.env.LOOPINTERVAL;
   const the_interval = minutes * 60 * 1000;
@@ -39,6 +40,8 @@ bot.on('start', function () {
   setInterval(function () {
 
     var onError = function (err) {
+      
+      bot.postMessageToChannel('salesforcedxeyes', `I've crashed, @WadeWegner! Help me: ${err.message}`);
       console.log(err.message, err.stack);
     };
 
