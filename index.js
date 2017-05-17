@@ -31,17 +31,22 @@ const bot = new Bot(settings);
 
 bot.on('start', () => {
 
+  var params = {
+    icon_emoji: ':beers:'
+  };
+
   console.log('Starting bot service ...'); // eslint-disable-line no-console
 
-  bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service, @WadeWegner!');
+  bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service!', params);
 
   const minutes = process.env.LOOPINTERVAL;
   const the_interval = minutes * 60 * 1000;
 
   setInterval(() => {
 
-    const onError = function (err) {  
-      bot.postMessageToChannel('salesforcedxeyes', `I've crashed, @WadeWegner! Help me: ${err.message}`);
+    const onError = function (err) {
+      bot.postMessageToChannel('salesforcedxeyes', `I've crashed, @WadeWegner! Help me: ${err.message}`, params);
+      bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me: ${err.message}`, params); 
       console.log(err.message, err.stack); // eslint-disable-line no-console
     };
 
@@ -58,22 +63,21 @@ bot.on('start', () => {
         const screen_name = data.statuses[tweet].user.screen_name;
         const id = data.statuses[tweet].id_str;
         const url = `https://twitter.com/${screen_name}/status/${id}`;
-
         let query = `SELECT id, url FROM posted_tweets WHERE url = '${url}';`;
 
         pool.query(query, (queryErr, result) => {
-          if (queryErr) { 
-            return onError(queryErr); 
+          if (queryErr) {
+            return onError(queryErr);
           }
 
           if (result.rowCount === 0) {
-          
+
             console.log(`Doesn't exist: ${url}`); // eslint-disable-line no-console
-            bot.postMessageToChannel('salesforcedxeyes', url);
+            bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
             query = `INSERT INTO posted_tweets (url) VALUES ('${url}')`;
 
             pool.query(query, (insertErr) => {
-              if (insertErr) { 
+              if (insertErr) {
                 return onError(insertErr);
               }
             });
