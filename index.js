@@ -1,61 +1,59 @@
-var Bot = require('slackbots');
-var Twit = require('twit');
-var Pool = require('pg').Pool;
-var moment = require('moment');
+const Bot = require('slackbots');
+const Twit = require('twit');
+const Pool = require('pg').Pool;
+const moment = require('moment');
 
-var config = {
+const config = {
   host: process.env.HOST,
-  port: 5432,
+  port: process.env.PORT,
   user: process.env.USER,
   ssl: true,
   password: process.env.PASSWORD,
-  database: process.env.DATABASE,
+  database: process.env.DATABASE
 };
 
-var pool = new Pool(config);
+const pool = new Pool(config);
 
-var settings = {
+const settings = {
   token: process.env.SLACKTOKEN,
   name: process.env.SLACKNAME
 };
 
-var T = new Twit({
+const T = new Twit({
   consumer_key: process.env.CONSUMERKEY,
   consumer_secret: process.env.CONSUMERSECRET,
   access_token: process.env.ACCESSTOKEN,
   access_token_secret: process.env.ACCESSTOKENSECRET,
-  timeout_ms: 60 * 1000, // optional HTTP request timeout to apply to all requests.
+  timeout_ms: 60 * 1000 // optional HTTP request timeout to apply to all requests.
 });
 
-var bot = new Bot(settings);
+const bot = new Bot(settings);
 
-bot.on('start', function () {
+bot.on('start', () => {
 
-  console.log("Starting bot service ...");
-  bot.postMessageToChannel('salesforcedxeyes', `Reporting for service, @WadeWegner!`);
+  console.log('Starting bot service ...'); // eslint-disable-line no-console
+
+  bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service, @WadeWegner!');
 
   const minutes = process.env.LOOPINTERVAL;
   const the_interval = minutes * 60 * 1000;
 
-  setInterval(function () {
+  setInterval(() => {
 
-    var onError = function (err) {
-      
+    const onError = function (err) {  
       bot.postMessageToChannel('salesforcedxeyes', `I've crashed, @WadeWegner! Help me: ${err.message}`);
-      console.log(err.message, err.stack);
+      console.log(err.message, err.stack); // eslint-disable-line no-console
     };
 
-    let exists = false;
     const sinceDate = moment().format('YYYY-MM-D');
-
     const searchTerms = process.env.SEARCHTERMS;
 
     T.get('search/tweets', {
       q: `${searchTerms} exclude:retweets since:${sinceDate}`,
       count: 100
-    }, function (err, data, response) {
+    }, (err, data) => {
 
-      for (let tweet in data.statuses) {
+      for (const tweet in data.statuses) {
 
         const screen_name = data.statuses[tweet].user.screen_name;
         const id = data.statuses[tweet].id_str;
@@ -63,23 +61,24 @@ bot.on('start', function () {
 
         let query = `SELECT id, url FROM posted_tweets WHERE url = '${url}';`;
 
-        pool.query(query, function (err, result) {
-          if (err) return onError(err);
+        pool.query(query, (queryErr, result) => {
+          if (queryErr) { 
+            return onError(queryErr); 
+          }
 
           if (result.rowCount === 0) {
           
-            console.log(`Doesn't exist: ${url}`);
+            console.log(`Doesn't exist: ${url}`); // eslint-disable-line no-console
 
             bot.postMessageToChannel('salesforcedxeyes', url);
             
             query = `INSERT INTO posted_tweets (url) VALUES ('${url}')`;
 
-            pool.query(query, function (err) {
-              if (err) return onError(err);
+            pool.query(query, (insertErr) => {
+              if (insertErr) { 
+                return onError(insertErr);
+              }
             });
-
-          } else {
-            // console.log(`Already exists: ${url}`);
           }
         });
       }
