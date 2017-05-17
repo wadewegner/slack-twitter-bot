@@ -44,8 +44,8 @@ bot.on('start', () => {
 
   setInterval(() => {
 
-    const onError = function (err) {
-      bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me: ${err.message}`, params); 
+    const onError = function (err, origin) {
+      bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (${origin}): ${err.message}`, params); 
       console.log(err.message, err.stack); // eslint-disable-line no-console
     };
 
@@ -66,7 +66,7 @@ bot.on('start', () => {
 
         pool.query(query, (queryErr, result) => {
           if (queryErr) {
-            return onError(queryErr);
+            return onError(queryErr, 'select');
           }
 
           if (result.rowCount === 0) {
@@ -77,7 +77,7 @@ bot.on('start', () => {
 
             pool.query(query, (insertErr) => {
               if (insertErr) {
-                return onError(insertErr);
+                return onError(insertErr, 'insert');
               }
             });
           }
