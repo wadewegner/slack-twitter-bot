@@ -2,6 +2,7 @@ const Bot = require('slackbots');
 const Twit = require('twit');
 const Pool = require('pg').Pool;
 const moment = require('moment');
+const sleep = require('sleep');
 
 const config = {
   host: process.env.HOST,
@@ -31,7 +32,7 @@ const bot = new Bot(settings);
 
 bot.on('start', () => {
 
-  var params = {
+  const params = {
     icon_emoji: ':beers:'
   };
 
@@ -55,7 +56,11 @@ bot.on('start', () => {
     T.get('search/tweets', {
       q: `${searchTerms} exclude:retweets since:${sinceDate}`,
       count: 100
-    }, (err, data) => {
+    }, (twitterErr, data) => {
+
+      if (twitterErr) {
+        return onError(twitterErr, 'twitter');
+      }
 
       for (const tweet in data.statuses) {
 
@@ -64,8 +69,10 @@ bot.on('start', () => {
         const url = `https://twitter.com/${screen_name}/status/${id}`;
         let query = `SELECT id, url FROM posted_tweets WHERE url = '${url}';`;
 
+        sleep.sleep(1); // sleep for two seconds
+
         pool.query(query, (queryErr, result) => {
-          if (queryErr) {
+          if (queryErr) {np
             return onError(queryErr, 'select');
           }
 
