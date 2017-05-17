@@ -39,6 +39,7 @@ bot.on('start', () => {
   console.log('Starting bot service ...'); // eslint-disable-line no-console
 
   // bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service!', params);
+  bot.postMessageToUser('wadewegner', 'Reporting for service!', params); 
 
   const minutes = process.env.LOOPINTERVAL;
   const the_interval = minutes * 60 * 1000;
