@@ -69,9 +69,7 @@ bot.on('start', () => {
           if (result.rowCount === 0) {
           
             console.log(`Doesn't exist: ${url}`); // eslint-disable-line no-console
-
             bot.postMessageToChannel('salesforcedxeyes', url);
-            
             query = `INSERT INTO posted_tweets (url) VALUES ('${url}')`;
 
             pool.query(query, (insertErr) => {
