@@ -6,7 +6,7 @@ const moment = require('moment');
 
 const config = {
   host: process.env.HOST,
-  port: process.env.PORT,
+  port: process.env.DBPORT,
   user: process.env.USER,
   ssl: true,
   password: process.env.PASSWORD,
@@ -32,16 +32,6 @@ const params = {
   icon_emoji: ':beers:'
 };
 
-const selectQuery = 'SELECT id, id_str, url FROM posted_tweets WHERE created_at > current_timestamp - interval \'2 day\';';
-const pool = new Pool(config);
-
-pool.query(selectQuery, (queryErr, result) => {
-  if (queryErr) {
-    return onError(queryErr, 'test');
-  }
-  console.log(`I found data: ${result.rows.length}`);
-});
-
 const bot = new Bot(settings);
 const minutes = process.env.LOOPINTERVAL;
 const the_interval = minutes * 60 * 1000;
@@ -55,6 +45,7 @@ bot.on('start', () => {
 
   setInterval(() => {
 
+    const pool = new Pool(config);
 
     const onError = function (err, origin) {
       bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (${origin}): ${err.message}`, params);
