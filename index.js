@@ -38,7 +38,7 @@ bot.on('start', () => {
 
   console.log('Starting bot service ...'); // eslint-disable-line no-console
 
-  bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service!', params);
+  // bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service!', params);
 
   const minutes = process.env.LOOPINTERVAL;
   const the_interval = minutes * 60 * 1000;
@@ -72,7 +72,7 @@ bot.on('start', () => {
         sleep.sleep(1); // sleep for two seconds
 
         pool.query(query, (queryErr, result) => {
-          if (queryErr) {np
+          if (queryErr) {
             return onError(queryErr, 'select');
           }
 
