@@ -1,6 +1,7 @@
 const Bot = require('slackbots');
 const Twit = require('twit');
-const Pool = require('pg').Pool;
+// const Pool = require('pg').Pool;
+const Pool = require('pg-pool');
 const moment = require('moment');
 
 const config = {
@@ -13,7 +14,6 @@ const config = {
   idleTimeoutMillis: 1000,
   max: 10
 };
-
 
 const settings = {
   token: process.env.SLACKTOKEN,
@@ -28,22 +28,20 @@ const T = new Twit({
   timeout_ms: 60 * 1000 // optional HTTP request timeout to apply to all requests.
 });
 
+const params = {
+  icon_emoji: ':beers:'
+};
+
 const bot = new Bot(settings);
+const minutes = process.env.LOOPINTERVAL;
+const the_interval = minutes * 60 * 1000;
 
 bot.on('start', () => {
-
-
-  const params = {
-    icon_emoji: ':beers:'
-  };
 
   console.log('Starting bot service ...'); // eslint-disable-line no-console
 
   // bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service!', params);
   bot.postMessageToUser('wadewegner', 'Reporting for service!', params);
-
-  const minutes = process.env.LOOPINTERVAL;
-  const the_interval = minutes * 60 * 1000;
 
   setInterval(() => {
 
