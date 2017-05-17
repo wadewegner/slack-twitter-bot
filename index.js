@@ -45,7 +45,6 @@ bot.on('start', () => {
   setInterval(() => {
 
     const onError = function (err) {
-      bot.postMessageToChannel('salesforcedxeyes', `I've crashed, @WadeWegner! Help me: ${err.message}`, params);
       bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me: ${err.message}`, params); 
       console.log(err.message, err.stack); // eslint-disable-line no-console
     };
