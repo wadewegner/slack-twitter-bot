@@ -93,8 +93,7 @@ bot.on('start', () => {
               if (insertErr) {
                 return onError(insertErr, 'insert');
               }
-              // bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
-              bot.postMessageToUser('wadewegner', `I found a tweet! ${url}`, params);
+              bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
             });
           }
         }
