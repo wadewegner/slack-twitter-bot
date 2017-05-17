@@ -12,14 +12,12 @@
     "moment": "^2.18.1",
     "pg": "6.2.2",
     "slackbots": "^1.0.2",
-    "sleep": "^5.1.1",
     "twit": "^2.2.5"
   },
   "devDependencies": {
     "eslint": "^3.19.0",
     "eslint-config-airbnb": "^15.0.1",
     "eslint-config-airbnb-base": "^11.2.0",
-    "eslint-plugin-import": "^2.2.0",
-    "sleep": "^5.1.1"
+    "eslint-plugin-import": "^2.2.0"
   }
 }

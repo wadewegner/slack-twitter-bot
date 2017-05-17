@@ -2,7 +2,6 @@ const Bot = require('slackbots');
 const Twit = require('twit');
 const Pool = require('pg').Pool;
 const moment = require('moment');
-const sleep = require('sleep');
 
 const config = {
   host: process.env.HOST,
@@ -10,10 +9,11 @@ const config = {
   user: process.env.USER,
   ssl: true,
   password: process.env.PASSWORD,
-  database: process.env.DATABASE
+  database: process.env.DATABASE,
+  idleTimeoutMillis: 1000,
+  max: 10
 };
 
-const pool = new Pool(config);
 
 const settings = {
   token: process.env.SLACKTOKEN,
@@ -32,6 +32,7 @@ const bot = new Bot(settings);
 
 bot.on('start', () => {
 
+
   const params = {
     icon_emoji: ':beers:'
   };
@@ -45,6 +46,8 @@ bot.on('start', () => {
   const the_interval = minutes * 60 * 1000;
 
   setInterval(() => {
+
+    const pool = new Pool(config);
 
     const onError = function (err, origin) {
       bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (${origin}): ${err.message}`, params);
