@@ -39,7 +39,7 @@ bot.on('start', () => {
   console.log('Starting bot service ...'); // eslint-disable-line no-console
 
   // bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service!', params);
-  bot.postMessageToUser('wadewegner', 'Reporting for service!', params); 
+  bot.postMessageToUser('wadewegner', 'Reporting for service!', params);
 
   const minutes = process.env.LOOPINTERVAL;
   const the_interval = minutes * 60 * 1000;
@@ -47,50 +47,58 @@ bot.on('start', () => {
   setInterval(() => {
 
     const onError = function (err, origin) {
-      bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (${origin}): ${err.message}`, params); 
+      bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (${origin}): ${err.message}`, params);
       console.log(err.message, err.stack); // eslint-disable-line no-console
     };
 
-    const sinceDate = moment().format('YYYY-MM-D');
-    const searchTerms = process.env.SEARCHTERMS;
+    const selectQuery = 'SELECT id, id_str, url FROM posted_tweets WHERE created_at > current_timestamp - interval \'2 day\';';
 
-    T.get('search/tweets', {
-      q: `${searchTerms} exclude:retweets since:${sinceDate}`,
-      count: 100
-    }, (twitterErr, data) => {
-
-      if (twitterErr) {
-        return onError(twitterErr, 'twitter');
+    pool.query(selectQuery, (queryErr, result) => {
+      if (queryErr) {
+        return onError(queryErr, 'select');
       }
 
-      for (const tweet in data.statuses) {
+      const sinceDate = moment().format('YYYY-MM-D');
+      const searchTerms = process.env.SEARCHTERMS;
 
-        const screen_name = data.statuses[tweet].user.screen_name;
-        const id = data.statuses[tweet].id_str;
-        const url = `https://twitter.com/${screen_name}/status/${id}`;
-        let query = `SELECT id, url FROM posted_tweets WHERE url = '${url}';`;
+      T.get('search/tweets', {
+        q: `${searchTerms} exclude:retweets since:${sinceDate}`,
+        count: 100
+      }, (twitterErr, data) => {
 
-        sleep.sleep(1); // sleep for two seconds
+        if (twitterErr) {
+          return onError(twitterErr, 'twitter');
+        }
 
-        pool.query(query, (queryErr, result) => {
-          if (queryErr) {
-            return onError(queryErr, 'select');
+        for (const tweet in data.statuses) {
+
+          const screen_name = data.statuses[tweet].user.screen_name;
+          const id = data.statuses[tweet].id_str;
+          const url = `https://twitter.com/${screen_name}/status/${id}`;
+
+          let exists = false;
+
+          for (const row in result.rows) {
+            if (result.rows[row].id_str === id) {
+              exists = true;
+              break;
+            }
           }
 
-          if (result.rowCount === 0) {
-
+          if (!exists) {
             console.log(`Doesn't exist: ${url}`); // eslint-disable-line no-console
-            bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
-            query = `INSERT INTO posted_tweets (url) VALUES ('${url}')`;
+            const insertQuery = `INSERT INTO posted_tweets (url, id_str) VALUES ('${url}', '${id}')`;
 
-            pool.query(query, (insertErr) => {
+            pool.query(insertQuery, (insertErr) => {
               if (insertErr) {
                 return onError(insertErr, 'insert');
               }
+              // bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
+              bot.postMessageToUser('wadewegner', `I found a tweet! ${url}`, params);
             });
           }
-        });
-      }
+        }
+      });
     });
   }, the_interval);
 });
