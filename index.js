@@ -27,12 +27,13 @@ var T = new Twit({
   timeout_ms: 60 * 1000, // optional HTTP request timeout to apply to all requests.
 });
 
-
 var bot = new Bot(settings);
 
 bot.on('start', function () {
 
-  const minutes = .25;
+  console.log("Starting bot service ...")
+
+  const minutes = process.env.LOOPINTERVAL;
   const the_interval = minutes * 60 * 1000;
 
   setInterval(function () {
