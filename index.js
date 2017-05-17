@@ -1,16 +1,19 @@
 const Bot = require('slackbots');
 const Twit = require('twit');
-// const Pool = require('pg').Pool;
 const Pool = require('pg-pool');
 const moment = require('moment');
+const url = require('url');
+
+const dbParams = url.parse(process.env.DATABASE_URL);
+const auth = dbParams.auth.split(':');
 
 const config = {
-  host: process.env.HOST,
-  port: process.env.DBPORT,
-  user: process.env.USER,
+  host: dbParams.hostname,
+  port: dbParams.port,
+  user: auth[0],
   ssl: true,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
+  password: auth[1],
+  database: dbParams.pathname.split('/')[1],
   idleTimeoutMillis: 1000,
   max: 10
 };
