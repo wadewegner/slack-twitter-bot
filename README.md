@@ -22,6 +22,8 @@ As you can see, I'm using a Heroku worker and a Postgres database. Run this scri
     CREATE TABLE posted_tweets(
        id integer,
        url text,
+       created_at timestamp SET DEFAULT now(),
+       id_str text,
        PRIMARY KEY( id )
     );
 
