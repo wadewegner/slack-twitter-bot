@@ -119,10 +119,10 @@ bot.on('start', () => {
               }, (err, response) => {
                 if (err) {
 
-                  if (!local) {
+                  if (local === 'false') {
                     bot.postMessageToChannel('salesforcedxeyes', `I found a tweet (but couldn't understand the emotional state)! ${url}`, params);
                   }
-                  
+
                   bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (BlueMix): ${err.message}`, params);
                   console.log(err.message, err.stack); // eslint-disable-line no-console
 
@@ -165,10 +165,10 @@ bot.on('start', () => {
                     emotion_faces = `${emotion_faces} :fb-angry:`;
                   }
 
-                  if (local) {
+                  if (local === 'true') {
                     bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet!${emotion_faces} ${url}`, params);
                   } else {
-                    bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
+                    bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet!${emotion_faces} ${url}`, params);
                   }
                 }
               });
