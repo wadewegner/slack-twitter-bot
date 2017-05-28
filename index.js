@@ -144,8 +144,8 @@ bot.on('start', () => {
                     sentiment_face = ':angry:';
                   }
 
-                  // bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
-                  bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  // bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
                 }
               });
             });
