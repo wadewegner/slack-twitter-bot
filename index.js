@@ -45,6 +45,7 @@ const nlu = new NaturalLanguageUnderstandingV1({
 const bot = new Bot(settings);
 const minutes = process.env.LOOPINTERVAL;
 const the_interval = minutes * 60 * 1000;
+const local = process.env.LOCAL;
 
 bot.on('start', () => {
 
@@ -147,8 +148,11 @@ bot.on('start', () => {
                     sentiment_face = ':angry:';
                   }
 
-                  // bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
-                  bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  if (local) {
+                    bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  } else {
+                    bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  }
                 }
               });
             });
