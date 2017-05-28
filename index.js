@@ -50,9 +50,7 @@ const local = process.env.LOCAL;
 bot.on('start', () => {
 
   console.log('Starting bot service ...'); // eslint-disable-line no-console
-
-  // bot.postMessageToChannel('salesforcedxeyes', 'Reporting for service!', params);
-  bot.postMessageToUser('wadewegner', 'Reporting for service!', params);
+  bot.postMessageToUser('wadewegner', `Reporting for service (local: ${local})!`, params);
 
   setInterval(() => {
 
@@ -121,7 +119,10 @@ bot.on('start', () => {
               }, (err, response) => {
                 if (err) {
 
-                  bot.postMessageToChannel('salesforcedxeyes', `I found a tweet (but couldn't understand the emotional state)! ${url}`, params);
+                  if (!local) {
+                    bot.postMessageToChannel('salesforcedxeyes', `I found a tweet (but couldn't understand the emotional state)! ${url}`, params);
+                  }
+                  
                   bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (BlueMix): ${err.message}`, params);
                   console.log(err.message, err.stack); // eslint-disable-line no-console
 
@@ -129,18 +130,16 @@ bot.on('start', () => {
 
                   const sentiment_score = response.sentiment.document.score;
                   const sentiment_label = response.sentiment.document.label;
-                  const language = response.language;
                   const sadness = response.emotion.document.emotion.sadness;
                   const joy = response.emotion.document.emotion.joy;
                   const fear = response.emotion.document.emotion.fear;
                   const disgust = response.emotion.document.emotion.sadness;
                   const anger = response.emotion.document.emotion.anger;
-                  const emotionOuput = `sadness: ${sadness} joy: ${joy} fear: ${fear} disgust: ${disgust} anger: ${anger}`;
 
                   let sentiment_face = ':neutral_face:';
                   if (sentiment_label === 'positive') {
                     sentiment_face = ':simple_smile:';
-                    if (sentiment_score > .5) {
+                    if (sentiment_score > 0.5) {
                       sentiment_face = ':smile:';
                     }
                   }
@@ -148,8 +147,26 @@ bot.on('start', () => {
                     sentiment_face = ':angry:';
                   }
 
+                  let emotion_faces = '';
+
+                  if (sadness > 0.3) {
+                    emotion_faces = `${emotion_faces} :cry:`;
+                  }
+                  if (joy > 0.3) {
+                    emotion_faces = `${emotion_faces} :joy:`;
+                  }
+                  if (fear > 0.3) {
+                    emotion_faces = `${emotion_faces} :fearful:`;
+                  }
+                  if (disgust > 0.3) {
+                    emotion_faces = `${emotion_faces} :anguished:`;
+                  }
+                  if (anger > 0.3) {
+                    emotion_faces = `${emotion_faces} :fb-angry:`;
+                  }
+
                   if (local) {
-                    bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
+                    bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet!${emotion_faces} ${url}`, params);
                   } else {
                     bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
                   }
