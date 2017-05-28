@@ -2,9 +2,10 @@ const Bot = require('slackbots');
 const Twit = require('twit');
 const Pool = require('pg-pool');
 const moment = require('moment');
-const url = require('url');
+const dbUrl = require('url');
+const NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
 
-const dbParams = url.parse(process.env.DATABASE_URL);
+const dbParams = dbUrl.parse(process.env.DATABASE_URL);
 const auth = dbParams.auth.split(':');
 
 const config = {
@@ -34,6 +35,12 @@ const T = new Twit({
 const params = {
   icon_emoji: ':beers:'
 };
+
+const nlu = new NaturalLanguageUnderstandingV1({
+  username: process.env.IBMUSERNAME,
+  password: process.env.IBMPASSWORD,
+  version_date: NaturalLanguageUnderstandingV1.VERSION_DATE_2017_02_27
+});
 
 const bot = new Bot(settings);
 const minutes = process.env.LOOPINTERVAL;
@@ -67,18 +74,20 @@ bot.on('start', () => {
 
       T.get('search/tweets', {
         q: `${searchTerms} exclude:retweets since:${sinceDate}`,
-        count: 100
-      }, (twitterErr, data) => {
+        count: process.env.SEARCHRESULTCOUNT
+      }, (twitterErr, twitterData) => {
 
         if (twitterErr) {
           return onError(twitterErr, 'twitter');
         }
 
-        for (const tweet in data.statuses) {
+        for (const tweet in twitterData.statuses) {
 
-          const screen_name = data.statuses[tweet].user.screen_name;
-          const id = data.statuses[tweet].id_str;
+          const screen_name = twitterData.statuses[tweet].user.screen_name;
+          const id = twitterData.statuses[tweet].id_str;
           const url = `https://twitter.com/${screen_name}/status/${id}`;
+          const tweetText = twitterData.statuses[tweet].text;
+          const lang = twitterData.statuses[tweet].lang;
 
           let exists = false;
 
@@ -97,7 +106,48 @@ bot.on('start', () => {
               if (insertErr) {
                 return onError(insertErr, 'insert');
               }
-              bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
+
+              nlu.analyze({
+                'text': tweetText,
+                'features': {
+                  'sentiment': {
+                    'document': true
+                  },
+                  'emotion': {
+                    'document': true
+                  }
+                }
+              }, (err, response) => {
+                if (err) {
+
+                  bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
+                  bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (BlueMix): ${err.message}`, params);
+                  console.log(err.message, err.stack); // eslint-disable-line no-console
+
+                } else {
+
+                  const sentiment_score = response.sentiment.document.score;
+                  const sentiment_label = response.sentiment.document.label;
+                  const language = response.language;
+                  const sadness = response.emotion.document.emotion.sadness;
+                  const joy = response.emotion.document.emotion.joy;
+                  const fear = response.emotion.document.emotion.fear;
+                  const disgust = response.emotion.document.emotion.sadness;
+                  const anger = response.emotion.document.emotion.anger;
+                  const emotionOuput = `sadness: ${sadness} joy: ${joy} fear: ${fear} disgust: ${disgust} anger: ${anger}`;
+
+                  let sentiment_face = ':neutral_face:';
+                  if (sentiment_label === 'positive') {
+                    sentiment_face = ':smile:';
+                  }
+                  if (sentiment_label === 'negative') {
+                    sentiment_face = ':angry:';
+                  }
+
+                  // bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
+                }
+              });
             });
           }
         }
