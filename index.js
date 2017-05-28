@@ -120,7 +120,7 @@ bot.on('start', () => {
               }, (err, response) => {
                 if (err) {
 
-                  bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
+                  bot.postMessageToChannel('salesforcedxeyes', `I found a tweet (but couldn't understand the emotional state)! ${url}`, params);
                   bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (BlueMix): ${err.message}`, params);
                   console.log(err.message, err.stack); // eslint-disable-line no-console
 
