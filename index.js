@@ -138,14 +138,17 @@ bot.on('start', () => {
 
                   let sentiment_face = ':neutral_face:';
                   if (sentiment_label === 'positive') {
-                    sentiment_face = ':smile:';
+                    sentiment_face = ':simple_smile:';
+                    if (sentiment_score > .5) {
+                      sentiment_face = ':smile:';
+                    }
                   }
                   if (sentiment_label === 'negative') {
                     sentiment_face = ':angry:';
                   }
 
-                  bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
-                  // bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  // bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
+                  bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
                 }
               });
             });
