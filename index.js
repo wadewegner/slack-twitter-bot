@@ -123,7 +123,7 @@ bot.on('start', () => {
                     bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
                   }
 
-                  bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (BlueMix): ${err.message}`, params);
+                  // bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (BlueMix): ${err.message}`, params);
                   console.log(err.message, err.stack); // eslint-disable-line no-console
 
                 } else {
