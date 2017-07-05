@@ -3,7 +3,8 @@ const Twit = require('twit');
 const Pool = require('pg-pool');
 const moment = require('moment');
 const dbUrl = require('url');
-const NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
+const einsteinTokenHelper = require('./lib/einstein_auth.js');
+const request = require('request');
 
 const dbParams = dbUrl.parse(process.env.DATABASE_URL);
 const auth = dbParams.auth.split(':');
@@ -35,12 +36,6 @@ const T = new Twit({
 const params = {
   icon_emoji: ':beers:'
 };
-
-const nlu = new NaturalLanguageUnderstandingV1({
-  username: process.env.IBMUSERNAME,
-  password: process.env.IBMPASSWORD,
-  version_date: NaturalLanguageUnderstandingV1.VERSION_DATE_2017_02_27
-});
 
 const bot = new Bot(settings);
 const minutes = process.env.LOOPINTERVAL;
@@ -86,7 +81,6 @@ bot.on('start', () => {
           const id = twitterData.statuses[tweet].id_str;
           const url = `https://twitter.com/${screen_name}/status/${id}`;
           const tweetText = twitterData.statuses[tweet].text;
-          const lang = twitterData.statuses[tweet].lang;
 
           let exists = false;
 
@@ -106,71 +100,67 @@ bot.on('start', () => {
                 return onError(insertErr, 'insert');
               }
 
-              nlu.analyze({
-                'text': tweetText,
-                'features': {
-                  'sentiment': {
-                    'document': true
+              einsteinTokenHelper.getAccessToken().then((accessToken) => {
+
+                const sentimentFormData = {
+                  modelId: 'CommunitySentiment',
+                  document: tweetText
+                };
+
+                const sentimentUrl = 'https://api.einstein.ai/v2/language/sentiment';
+
+                const options = {
+                  url: sentimentUrl,
+                  headers: {
+                    'Authorization': `Bearer ${accessToken}`
                   },
-                  'emotion': {
-                    'document': true
-                  }
-                }
-              }, (err, response) => {
-                if (err) {
+                  formData: sentimentFormData
+                };
 
-                  if (local === 'false') {
-                    bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
-                  }
+                request.post(options, (error, response, body) => {
+                  if (error) {
 
-                  // bot.postMessageToUser('wadewegner', `I've crashed, @WadeWegner! Help me (BlueMix): ${err.message}`, params);
-                  console.log(err.message, err.stack); // eslint-disable-line no-console
+                    if (local === 'true') {
+                      bot.postMessageToUser('wadewegner', `I found a tweet (error)! ${url}`, params);
+                    } else {
+                      bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
+                    }
 
-                } else {
+                  } else {
+                    const sentimentBody = JSON.parse(body);
 
-                  const sentiment_score = response.sentiment.document.score;
-                  const sentiment_label = response.sentiment.document.label;
-                  const sadness = response.emotion.document.emotion.sadness;
-                  const joy = response.emotion.document.emotion.joy;
-                  const fear = response.emotion.document.emotion.fear;
-                  const disgust = response.emotion.document.emotion.sadness;
-                  const anger = response.emotion.document.emotion.anger;
+                    if (sentimentBody.message) {
 
-                  let sentiment_face = ':neutral_face:';
-                  if (sentiment_label === 'positive') {
-                    sentiment_face = ':simple_smile:';
-                    if (sentiment_score > 0.5) {
-                      sentiment_face = ':smile:';
+                      if (local === 'true') {
+                        bot.postMessageToUser('wadewegner', `I found a tweet (error)! ${url}`, params);
+                      } else {
+                        bot.postMessageToChannel('salesforcedxeyes', `I found a tweet! ${url}`, params);
+                      }
+
+                    } else {
+
+                      const positive_probability = sentimentBody.probabilities[0].probability;
+                      const negative_probability = sentimentBody.probabilities[1].probability;
+
+                      let sentiment_face = ':neutral_face:';
+                      if (positive_probability > 0.5) {
+                        sentiment_face = ':simple_smile:';
+                      }
+                      if (positive_probability > 0.7) {
+                        sentiment_face = ':smile:';
+                      }
+                      if (negative_probability > 0.6) {
+                        sentiment_face = ':angry:';
+                      }
+
+                      if (local === 'true') {
+                        bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet! ${url}`, params);
+                      } else {
+                        bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, params);
+                      }
                     }
                   }
-                  if (sentiment_label === 'negative') {
-                    sentiment_face = ':angry:';
-                  }
-
-                  let emotion_faces = '';
-
-                  if (sadness > 0.3) {
-                    emotion_faces = `${emotion_faces} :cry:`;
-                  }
-                  if (joy > 0.3) {
-                    emotion_faces = `${emotion_faces} :joy:`;
-                  }
-                  if (fear > 0.3) {
-                    emotion_faces = `${emotion_faces} :fearful:`;
-                  }
-                  if (disgust > 0.3) {
-                    emotion_faces = `${emotion_faces} :anguished:`;
-                  }
-                  if (anger > 0.3) {
-                    emotion_faces = `${emotion_faces} :fb-angry:`;
-                  }
-
-                  if (local === 'true') {
-                    bot.postMessageToUser('wadewegner', `I found a ${sentiment_face} tweet!${emotion_faces} ${url}`, params);
-                  } else {
-                    bot.postMessageToChannel('salesforcedxeyes', `I found a ${sentiment_face} tweet!${emotion_faces} ${url}`, params);
-                  }
-                }
+                });
               });
             });
           }

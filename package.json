@@ -9,9 +9,12 @@
   "author": "Wade Wegner",
   "license": "ISC",
   "dependencies": {
+    "jsonwebtoken": "^7.4.1",
     "moment": "^2.18.1",
     "pg": "6.2.2",
     "pg-pool": "^1.7.1",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1",
     "slackbots": "^1.0.2",
     "twit": "^2.2.5",
     "watson-developer-cloud": "^2.32.1"
