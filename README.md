@@ -1,21 +1,22 @@
 # slack-twitter-bot
-A simple slack bot that will keep track of tweets and post to a room.
+
+A simple slack bot that will keep track of tweets and post to a room. It also uses the Einstein Sentiment API to determine if it's positive, negative, or neutral. It's designed to run in Heroku.
 
 You'll want to setup the following environment variables for this to work (this is formatted for VS Code "env"):
 
-    "HOST": "",
-    "PORT": "",
-    "USER": "",
-    "PASSWORD": "",
-    "DATABASE": "",
+    "DATABASE_URL": "",
     "SLACKTOKEN": "",
-    "SLACKNAME": "Twitter integration from Wade",
+    "SLACKNAME": "SFDX Bot",
     "CONSUMERKEY": "",
     "CONSUMERSECRET": "",
     "ACCESSTOKEN": "",
     "ACCESSTOKENSECRET": "",
     "SEARCHTERMS": "#SalesforceDX OR #SFDX OR SalesforceDX OR SFDX",
-    "LOOPINTERVAL": "2"
+    "SEARCHRESULTCOUNT": 1,
+    "LOOPINTERVAL": "2",
+    "LOCAL": "",
+    "EINSTEIN_VISION_PRIVATE_KEY": "",
+    "EINSTEIN_VISION_ACCOUNT_ID": ""
 
 As you can see, I'm using a Heroku worker and a Postgres database. Run this script to create it:
 
