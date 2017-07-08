@@ -1,7 +1,9 @@
 const twitterHelper = require('../lib/twitter.js');
 const postgresHelper = require('../lib/postgres.js');
 
-postgresHelper.getTweetIdsWithoutTextFromDb().then((queryResults) => {
+const type = 2; // 1 = text, 2 = lang
+
+postgresHelper.getTweetIdsWithoutTextOrLangFromDb(type).then((queryResults) => {
 
   const rows = queryResults.rows;
   let i;
@@ -27,11 +29,16 @@ postgresHelper.getTweetIdsWithoutTextFromDb().then((queryResults) => {
         let tweet_text = tweet.text;
         tweet_text = tweet_text.replace(/'/g, "''");
         const tweet_id = tweet.id_str;
+        const tweet_lang = tweet.lang;
 
-        // UPDATE sometable SET somevalue = $1
-        const updateQuery = `UPDATE posted_tweets SET tweet_text = '${tweet_text}' WHERE id_str = '${tweet_id}'`;
+        let updateQuery;
+        if (type === 1) {
+          // updateQuery = `UPDATE posted_tweets SET tweet_text = '${tweet_text}' WHERE id_str = '${tweet_id}'`;
+        } else {
+          updateQuery = `UPDATE posted_tweets SET lang = '${tweet_lang}' WHERE id_str = '${tweet_id}'`;
+        }
 
-        postgresHelper.updateTweetText(updateQuery, tweet_text, tweet_id).then((updateResults) => {
+        postgresHelper.updateTweetText(updateQuery).then((updateResults) => {
           console.log(updateResults);
         });
       }

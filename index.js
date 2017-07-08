@@ -24,6 +24,8 @@ bot.on('start', () => {
 
           const screen_name = twitterData.statuses[tweet].user.screen_name;
           const id = twitterData.statuses[tweet].id_str;
+          const lang = twitterData.statuses[tweet].lang;
+          
           const url = `https://twitter.com/${screen_name}/status/${id}`;
           let tweetText = twitterData.statuses[tweet].text;
           const exists = twitterHelper.checkExists(result, id);
@@ -31,7 +33,7 @@ bot.on('start', () => {
           if (!exists) {
             console.log(`Doesn't exist: ${url}`);
             tweetText = tweetText.replace(/'/g, "''");
-            const insertQuery = `INSERT INTO posted_tweets (url, id_str, tweet_text) VALUES ('${url}', '${id}', '${tweetText}')`;
+            const insertQuery = `INSERT INTO posted_tweets (url, id_str, tweet_text, lang) VALUES ('${url}', '${id}', '${tweetText}', '${lang}')`;
 
             postgresHelper.insertTweet(insertQuery, local).then(() => {
               einsteinTokenHelper.getAccessToken().then((accessToken) => {
@@ -40,7 +42,7 @@ bot.on('start', () => {
 
                     const insertion = textFormatterHelper.formatEinsteinText(sentimentBody, intentBody);
                     slackHelper.handleMessage(bot, 'salesforcedxeyes', `I found a ${insertion}tweet! ${url}`, local);
-                    
+
                   });
                 });
               });
