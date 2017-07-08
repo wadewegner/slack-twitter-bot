@@ -8,12 +8,12 @@ const textFormatterHelper = require('./lib/text_formatting.js');
 
 const the_interval = process.env.LOOPINTERVAL * 60 * 1000;
 const local = process.env.LOCAL;
+const slackChannel = process.env.SLACK_CHANNEL;
 const bot = slackHelper.getBot();
 
 bot.on('start', () => {
 
   console.log('Starting bot service ...');
-  slackHelper.postMessageToUser(bot, 'wadewegner', `Reporting for service (local: ${local})!`);
 
   setInterval(() => {
 
@@ -41,7 +41,7 @@ bot.on('start', () => {
                   einsteinIntentHelper.getIntent(accessToken, tweetText).then((intentBody) => {
 
                     const insertion = textFormatterHelper.formatEinsteinText(sentimentBody, intentBody);
-                    slackHelper.handleMessage(bot, 'salesforcedxeyes', `I found a ${insertion}tweet! ${url}`, local);
+                    slackHelper.postMessageToChannel(bot, slackChannel, `I found a ${insertion}tweet! ${url}`);
 
                   });
                 });
