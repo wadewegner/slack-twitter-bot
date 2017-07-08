@@ -25,7 +25,7 @@ bot.on('start', () => {
           const screen_name = twitterData.statuses[tweet].user.screen_name;
           const id = twitterData.statuses[tweet].id_str;
           const lang = twitterData.statuses[tweet].lang;
-          
+
           const url = `https://twitter.com/${screen_name}/status/${id}`;
           let tweetText = twitterData.statuses[tweet].text;
           const exists = twitterHelper.checkExists(result, id);
@@ -40,9 +40,20 @@ bot.on('start', () => {
                 einsteinSentimentHelper.getSentiment(accessToken, tweetText).then((sentimentBody) => {
                   einsteinIntentHelper.getIntent(accessToken, tweetText).then((intentBody) => {
 
-                    const insertion = textFormatterHelper.formatEinsteinText(sentimentBody, intentBody);
-                    slackHelper.postMessageToChannel(bot, slackChannel, `I found a ${insertion}tweet! ${url}`);
+                    const sentimentResults = einsteinSentimentHelper.getSentimentResults(sentimentBody);
+                    const intentResults = einsteinIntentHelper.getIntentResults(intentBody);
+                    const einsteinResults = Object.assign(sentimentResults, intentResults);
 
+                    const insertion = textFormatterHelper.formatEinsteinText(sentimentResults, intentResults);
+                    const replyMessage = textFormatterHelper.formatReplyMessage(einsteinResults);
+
+                    let message = `I found a ${insertion}tweet! ${url}`;
+
+                    if (einsteinResults.negative > .5 || einsteinResults.issue > .3 || einsteinResults.question > .3) {
+                      message += '\n\nBased on the sentiment & predicted intent, I felt it best to notify the <!channel>.';
+                    }
+
+                    slackHelper.postMessageToChannel(bot, slackChannel, message, replyMessage);
                   });
                 });
               });
