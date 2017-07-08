@@ -1,5 +1,6 @@
 const einsteinTokenHelper = require('./lib/einstein_auth.js');
 const einsteinSentimentHelper = require('./lib/einstein_sentiment.js');
+const einsteinIntentHelper = require('./lib/einstein_intent.js');
 const postgresHelper = require('./lib/postgres.js');
 const twitterHelper = require('./lib/twitter.js');
 const slackHelper = require('./lib/slack.js');
@@ -15,7 +16,7 @@ bot.on('start', () => {
 
   setInterval(() => {
 
-    postgresHelper.getTweetsFromDb().then((result) => {
+    postgresHelper.getRecentTweetsFromDb().then((result) => {
       twitterHelper.searchTweets().then((twitterData) => {
 
         for (const tweet in twitterData.statuses) {
@@ -23,25 +24,50 @@ bot.on('start', () => {
           const screen_name = twitterData.statuses[tweet].user.screen_name;
           const id = twitterData.statuses[tweet].id_str;
           const url = `https://twitter.com/${screen_name}/status/${id}`;
-          const tweetText = twitterData.statuses[tweet].text;
+          let tweetText = twitterData.statuses[tweet].text;
           const exists = twitterHelper.checkExists(result, id);
 
           if (!exists) {
             console.log(`Doesn't exist: ${url}`); // eslint-disable-line no-console
-            const insertQuery = `INSERT INTO posted_tweets (url, id_str) VALUES ('${url}', '${id}')`;
+            tweetText = tweetText.replace(/'/g, "''");
+            const insertQuery = `INSERT INTO posted_tweets (url, id_str, tweet_text) VALUES ('${url}', '${id}', '${tweetText}')`;
 
-            postgresHelper.insertTweet(insertQuery).then(() => {
+            postgresHelper.insertTweet(insertQuery, local).then(() => {
               einsteinTokenHelper.getAccessToken().then((accessToken) => {
-                einsteinSentimentHelper.getSentiment(accessToken, tweetText).then((responseBody) => {
+                einsteinSentimentHelper.getSentiment(accessToken, tweetText).then((sentimentResponseBody) => {
+                  einsteinIntentHelper.getIntent(accessToken, tweetText).then((intentResponseBody) => {
 
-                  const sentimentBody = JSON.parse(responseBody);
+                    const sentimentBody = JSON.parse(sentimentResponseBody);
+                    const intentBody = JSON.parse(intentResponseBody);
+                    let sentiment_face = '';
+                    let intent = '';
+                    let insertion = '';
 
-                  if (sentimentBody.message) {
-                    slackHelper.handleMessage(bot, 'salesforcedxeyes', `I found a tweet! ${url}`, local);
-                  } else {
-                    const sentiment_face = einsteinSentimentHelper.getSentimentFace(sentimentBody);
-                    slackHelper.handleMessage(bot, 'salesforcedxeyes', `I found a ${sentiment_face} tweet! ${url}`, local);
-                  }
+                    if (!sentimentBody.message) {
+                      sentiment_face = einsteinSentimentHelper.getSentimentFace(sentimentBody);
+                    }
+                    if (!intentBody.message) {
+                      intent = einsteinIntentHelper.getIntentCategory(intentBody);
+                    }
+
+                    if (sentiment_face) {
+                      insertion += sentiment_face;
+                    }
+                    if (intent) {
+                      if (sentiment_face) {
+                        insertion += ` ${intent}`;
+                      } else {
+                        insertion += intent;
+                      }
+                    }
+                    if ((sentiment_face !== '') || (intent !== '')) {
+                      insertion += ' ';
+                    }
+                    
+
+                    slackHelper.handleMessage(bot, 'salesforcedxeyes', `I found a ${insertion}tweet! ${url}`, local);
+
+                  });
                 });
               });
             });
