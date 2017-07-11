@@ -53,7 +53,9 @@ bot.on('start', () => {
                       message += '\n\nBased on the sentiment & predicted intent, I felt it best to notify the <!channel>.';
                     }
 
-                    slackHelper.postMessageToChannel(bot, slackChannel, message, replyMessage);
+                    if (einsteinResults.badge < 0.8) {
+                      slackHelper.postMessageToChannel(bot, slackChannel, message, replyMessage);
+                    }
                   });
                 });
               });
